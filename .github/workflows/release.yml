@@ -24,78 +24,78 @@ jobs:
     outputs:
       VERSION: ${{ steps.extract_version.outputs.VERSION }}
 
-  build:
-    name: build release
-    strategy:
-      matrix:
-        # TODO: fix and add aarch64-unknown-linux-gnu target
-        # See: https://github.com/matter-labs/era-test-node/issues/56
-        arch: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, aarch64-apple-darwin]
-        include:
-          -   arch: x86_64-unknown-linux-gnu
-              platform: ubuntu-20.04
-          -   arch: x86_64-apple-darwin
-              platform: macos-latest
-          -   arch: aarch64-apple-darwin
-              platform: macos-latest
+  # build:
+  #   name: build release
+  #   strategy:
+  #     matrix:
+  #       # TODO: fix and add aarch64-unknown-linux-gnu target
+  #       # See: https://github.com/matter-labs/era-test-node/issues/56
+  #       arch: [x86_64-unknown-linux-gnu, x86_64-apple-darwin, aarch64-apple-darwin]
+  #       include:
+  #         -   arch: x86_64-unknown-linux-gnu
+  #             platform: ubuntu-20.04
+  #         -   arch: x86_64-apple-darwin
+  #             platform: macos-latest
+  #         -   arch: aarch64-apple-darwin
+  #             platform: macos-latest
 
-    runs-on: ${{ matrix.platform }}
-    needs: [extract-version]
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v3
-      - name: Get latest version of stable Rust
-        run: rustup update stable
-      - name: Install target
-        run: rustup target add ${{ matrix.arch }}
-      - uses: Swatinem/rust-cache@v2
-        with:
-          cache-on-failure: false
-      - name: Run cargo clean
-        run: cargo clean
+  #   runs-on: ${{ matrix.platform }}
+  #   needs: [extract-version]
+  #   steps:
+  #     - name: Checkout sources
+  #       uses: actions/checkout@v3
+  #     # - name: Get latest version of stable Rust
+  #     #   run: rustup update stable
+  #     # - name: Install target
+  #     #   run: rustup target add ${{ matrix.arch }}
+  #     # - uses: Swatinem/rust-cache@v2
+  #     #   with:
+  #     #     cache-on-failure: false
+  #     # - name: Run cargo clean
+  #     #   run: cargo clean
 
-      # ==============================
-      #       Builds
-      # ==============================
+  #     # # ==============================
+  #     # #       Builds
+  #     # # ==============================
 
-      - name: Install cross from source
-        run: |
-          cargo install --git https://github.com/cross-rs/cross cross --branch main
+  #     # - name: Install cross from source
+  #     #   run: |
+  #     #     cargo install --git https://github.com/cross-rs/cross cross --branch main
 
-      - name: Build era-test-node for ${{ matrix.arch }}
-        run: |
-          make build-${{ matrix.arch }}
+  #     # - name: Build era-test-node for ${{ matrix.arch }}
+  #     #   run: |
+  #     #     make build-${{ matrix.arch }}
     
-      - name: Rename and move binary
-        run: |      
-          mkdir artifacts
-          mv target/${{ matrix.arch }}/release/era_test_node ./artifacts
+  #     # - name: Rename and move binary
+  #     #   run: |      
+  #     #     mkdir artifacts
+  #     #     mv target/${{ matrix.arch }}/release/era_test_node ./artifacts
       
-      - name: Create artifacts
-        run: |
-          cd artifacts
-          tar -czf era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz era_test_node*
-          mv *tar.gz* ..
+  #     # - name: Create artifacts
+  #     #   run: |
+  #     #     cd artifacts
+  #     #     tar -czf era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz era_test_node*
+  #     #     mv *tar.gz* ..
     
-        # =======================================================================
-        # Upload artifacts
-        # This is required to share artifacts between different jobs
-        # =======================================================================
-      - name:  Upload artifact
-        uses:  actions/upload-artifact@v3
-        with:
-          name: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
-          path: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
+  #     #   # =======================================================================
+  #     #   # Upload artifacts
+  #     #   # This is required to share artifacts between different jobs
+  #     #   # =======================================================================
+  #     # - name:  Upload artifact
+  #     #   uses:  actions/upload-artifact@v3
+  #     #   with:
+  #     #     name: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
+  #     #     path: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz
 
-      - name: Upload signature
-        uses: actions/upload-artifact@v3
-        with:
-          name: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
-          path: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
+  #     # - name: Upload signature
+  #     #   uses: actions/upload-artifact@v3
+  #     #   with:
+  #     #     name: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
+  #     #     path: era_test_node-${{ needs.extract-version.outputs.VERSION }}-${{ matrix.arch }}.tar.gz.asc
 
   draft-release:
     name: draft release
-    needs:  [build, extract-version]
+    needs:  [extract-version]
     runs-on: ubuntu-latest
     env:
       VERSION:  ${{ needs.extract-version.outputs.VERSION }}
@@ -109,11 +109,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      # ==============================
-      #       Download artifacts
-      # ==============================
-      - name: Download artifacts
-        uses: actions/download-artifact@v3
+      # # ==============================
+      # #       Download artifacts
+      # # ==============================
+      # - name: Download artifacts
+      #   uses: actions/download-artifact@v3
 
       # ==============================
       #       Create release draft
