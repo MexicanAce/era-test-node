@@ -172,8 +172,5 @@ jobs:
           ENDBODY
           )
           assets=()
-          for asset in ./era_test_node-*.tar.gz*; do
-              assets+=("-a" "$asset/$asset")
-          done
           tag_name="${{ env.VERSION }}"
           echo "$body" | hub release create --draft "${assets[@]}" -F "-" "$tag_name"
